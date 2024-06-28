@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Rental Mobil</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Sistem Rental Mobil</h1>
+    <div id="auth">
+      <h2>Pendaftaran Pengguna Baru</h2>
+      <form id="registerForm">
+        <label for="fullName">Nama Lengkap:</label>
+        <input type="text" id="fullName" name="fullName" required />
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
+        <label for="phone">Nomor Telepon:</label>
+        <input type="text" id="phone" name="phone" required />
+        <label for="address">Alamat:</label>
+        <input type="text" id="address" name="address" required />
+        <label for="nik">NIK:</label>
+        <input type="text" id="nik" name="nik" required />
+        <button type="submit">Daftar</button>
+      </form>
+
+      <h2>Login Pengguna</h2>
+      <form id="loginForm">
+        <label for="loginEmail">Email:</label>
+        <input type="email" id="loginEmail" name="loginEmail" required />
+        <label for="loginPassword">Password:</label>
+        <input
+          type="password"
+          id="loginPassword"
+          name="loginPassword"
+          required
+        />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <div id="main" style="display: none">
+      <h2>Daftar Mobil</h2>
+      <ul id="carList"></ul>
+
+      <h2>Pencarian Mobil</h2>
+      <form id="searchForm">
+        <input
+          type="text"
+          id="searchQuery"
+          name="searchQuery"
+          placeholder="Cari mobil..."
+        />
+        <button type="submit">Cari</button>
+      </form>
+
+      <h2>Pemesanan Mobil</h2>
+      <form id="rentalForm">
+        <label for="car">Pilih Mobil:</label>
+        <select id="car" name="car"></select>
+        <label for="startDate">Tanggal Mulai:</label>
+        <input type="date" id="startDate" name="startDate" required />
+        <label for="endDate">Tanggal Selesai:</label>
+        <input type="date" id="endDate" name="endDate" required />
+        <button type="submit">Pesan</button>
+      </form>
+
+      <h2>Manajemen Reservasi</h2>
+      <ul id="reservationList"></ul>
+    </div>
+
+    <script>
+      let users = [];
+      let currentUser = null;
+      let cars = [
+        { id: 1, name: "Toyota Avanza", available: true, price: 250000 },
+        { id: 2, name: "Honda Brio", available: true, price: 300000 },
+        { id: 3, name: "Suzuki Ertiga", available: true, price: 400000 },
+        { id: 4, name: "Mercedes Benz", available: false, price: 800000 },
+      ];
+      let reservations = [];
+
+      const carList = document.getElementById("carList");
+      const carSelect = document.getElementById("car");
+      const rentalForm = document.getElementById("rentalForm");
+      const reservationList = document.getElementById("reservationList");
+      const authDiv = document.getElementById("auth");
+      const mainDiv = document.getElementById("main");
+
+      function populateCarList() {
+        carList.innerHTML = "";
+        carSelect.innerHTML = "";
+
+        cars.forEach((car) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = `${car.name} - ${
+            car.available ? "Tersedia" : "Tidak Tersedia"
+          } - Rp ${car.price} / hari`;
+          carList.appendChild(listItem);
+
+          if (car.available) {
+            const option = document.createElement("option");
+            option.value = car.id;
+            option.textContent = `${car.name} - Rp ${car.price} / hari`;
+            carSelect.appendChild(option);
+          }
+        });
+      }
+
+      function updateReservationList() {
+        reservationList.innerHTML = "";
+
+        reservations.forEach((reservation) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = `Mobil: ${reservation.car.name}, Tanggal: ${reservation.startDate} - ${reservation.endDate}, Penyewa: ${reservation.user.fullName}, Total Biaya: Rp ${reservation.totalCost}`;
+          reservationList.appendChild(listItem);
+        });
+      }
+
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const newUser = {
+            fullName: event.target.fullName.value,
+            email: event.target.email.value,
+            password: event.target.password.value,
+            phone: event.target.phone.value,
+            address: event.target.address.value,
+            nik: event.target.nik.value,
+          };
+
+          users.push(newUser);
+          alert("Pendaftaran berhasil. Silakan login.");
+          event.target.reset();
+        });
+
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const email = event.target.loginEmail.value;
+          const password = event.target.loginPassword.value;
+          const user = users.find(
+            (user) => user.email === email && user.password === password
+          );
+
+          if (user) {
+            currentUser = user;
+            authDiv.style.display = "none";
+            mainDiv.style.display = "block";
+            populateCarList();
+            updateReservationList();
+          } else {
+            alert("Email atau password salah.");
+          }
+        });
+
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const query = event.target.searchQuery.value.toLowerCase();
+          const filteredCars = cars.filter((car) =>
+            car.name.toLowerCase().includes(query)
+          );
+
+          carList.innerHTML = "";
+          filteredCars.forEach((car) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = `${car.name} - ${
+              car.available ? "Tersedia" : "Tidak Tersedia"
+            } - Rp ${car.price} / hari`;
+            carList.appendChild(listItem);
+          });
+        });
+
+      rentalForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const carId = parseInt(event.target.car.value);
+        const startDate = event.target.startDate.value;
+        const endDate = event.target.endDate.value;
+        const car = cars.find((c) => c.id === carId);
+
+        if (car && car.available) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          const rentalDays = (end - start) / (1000 * 60 * 60 * 24) + 1;
+          const totalCost = rentalDays * car.price;
+
+          car.available = false;
+          const newReservation = {
+            car: car,
+            startDate: startDate,
+            endDate: endDate,
+            user: currentUser,
+            totalCost: totalCost,
+          };
+
+          reservations.push(newReservation);
+          alert(
+            `Mobil ${car.name} berhasil dipesan oleh ${currentUser.fullName} dari ${startDate} hingga ${endDate}. Total biaya: Rp ${totalCost}`
+          );
+          populateCarList();
+          updateReservationList();
+        } else {
+          alert("Mobil tidak tersedia.");
+        }
+      });
+
+      populateCarList();
+      updateReservationList();
+    </script>
+  </body>
+</html>
